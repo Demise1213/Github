@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dragon Ball Legends - Personajes</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #fff;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .subtitulo {
+      text-align: center;
+      color: #ffc107;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      font-weight: bold;
+    }
+
+    .selector-box {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-size: 1.1rem;
+    }
+
+    select {
+      width: 100%;
+      padding: 1rem;
+      border: 3px solid #ffc107;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: white;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    select:hover {
+      box-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
+    }
+
+    select:focus {
+      outline: none;
+      box-shadow: 0 0 20px rgba(255, 193, 7, 0.8);
+    }
+
+    .info-box {
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      display: none;
+      animation: slideIn 0.4s ease-out;
+    }
+
+    .info-box.visible {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 0;
+    }
+
+    @media (max-width: 768px) {
+      .info-box.visible {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .imagen-personaje {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .imagen-personaje img {
+      max-width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    }
+
+    .tipo-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #ffc107;
+      color: #000;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .rareza {
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-size: 1.5rem;
+    }
+
+    .info-contenido {
+      padding: 2rem;
+    }
+
+    .nombre-personaje {
+      font-size: 2rem;
+      color: #ffc107;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    .saga {
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      font-style: italic;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat {
+      background: #f5f5f5;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid #ffc107;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #666;
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-valor {
+      font-size: 1.5rem;
+      color: #333;
+      font-weight: bold;
+    }
+
+    .descripcion {
+      background: #f9f9f9;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid #ffc107;
+    }
+
+    .descripcion-titulo {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 0.5rem;
+      font-size: 1.05rem;
+    }
+
+    .descripcion-texto {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .habilidades {
+      margin-top: 1.5rem;
+    }
+
+    .habilidades-titulo {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .habilidad {
+      background: #f5f5f5;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.8rem;
+      border-left: 4px solid #ff6b6b;
+    }
+
+    .habilidad-nombre {
+      font-weight: bold;
+      color: #ff6b6b;
+      margin-bottom: 0.3rem;
+    }
+
+    .habilidad-desc {
+      color: #666;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🐉 DRAGON BALL LEGENDS 🐉</h1>
+    <p class="subtitulo">Selecciona un personaje para ver su información completa</p>
+
+    <div class="selector-box">
+      <label for="personajes">Elige un personaje ULTRA:</label>
+      <select id="personajes" onchange="mostrarPersonaje()">
+        <option value="">-- Selecciona un personaje --</option>
+        <option value="1">Goku Ultra Instinto</option>
+        <option value="2">Vegeta Ultra Ego</option>
+        <option value="3">Goku Ultra Instinto Completo</option>
+        <option value="4">Granolah Ultra Poder</option>
+        <option value="5">Jiren Ultra Instinto</option>
+        <option value="6">Kale Ultra Poder</option>
+        <option value="7">Caulifla Ultra Poder</option>
+        <option value="8">Kefla Ultra Poder</option>
+        <option value="9">Toppo Ultra Divino</option>
+        <option value="10">Gohan Ultra Instinto</option>
+        <option value="11">Trunks Ultra Poder</option>
+        <option value="12">Vegito Ultra Fusión</option>
+      </select>
+    </div>
+
+    <div id="infoBox" class="info-box">
+      <div class="imagen-personaje">
+        <img id="imagenPersonaje" src="" alt="Personaje">
+        <div class="tipo-badge" id="tipo"></div>
+        <div class="rareza" id="rareza"></div>
+      </div>
+      <div class="info-contenido">
+        <div class="nombre-personaje" id="nombre"></div>
+        <div class="saga" id="saga"></div>
+        
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-label">PODER</div>
+            <div class="stat-valor" id="poder"></div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">DEFENSA</div>
+            <div class="stat-valor" id="defensa"></div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">VELOCIDAD</div>
+            <div class="stat-valor" id="velocidad"></div>
+          </div>
+        </div>
+
+        <div class="descripcion">
+          <div class="descripcion-titulo">Descripción</div>
+          <div class="descripcion-texto" id="descripcion"></div>
+        </div>
+
+        <div class="habilidades">
+          <div class="habilidades-titulo">⚡ Habilidades Principales</div>
+          <div id="habilidadesContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const personajes = {
+      1: {
+        nombre: 'Goku (Ultra Instinto)',
+        saga: 'Torneo de Poder',
+        imagen: 'https://via.placeholder.com/300x400/1a73e8/ffffff?text=Goku+UI',
+        tipo: 'Saiyan',
+        rareza: '⭐⭐⭐⭐⭐',
+        poder: 98,
+        defensa: 85,
+        velocidad: 99,
+        descripcion: 'La forma suprema de Goku, donde logra dominar el Ultra Instinto. Con esta transformación, puede atacar y defender sin pensar conscientemente, permitiéndole evadir cualquier ataque.',
+        habilidades: [
+          { nombre: '⚫ Kamehameha Definitivo', desc: 'Un Kamehameha cargado con toda la energía del Ultra Instinto' },
+          { nombre: '⚫ Instinto Ultra', desc: 'Movimiento automático de defensa que esquiva todos los ataques' },
+          { nombre: '⚫ Teleportación Instantánea', desc: 'Se teletransporta al objetivo en un instante' }
+        ]
+      },
+      2: {
+        nombre: 'Vegeta (Evolution)',
+        saga: 'Saga del Universo 6',
+        imagen: 'https://via.placeholder.com/300x400/e8341a/ffffff?text=Vegeta+Evo',
+        tipo: 'Saiyan',
+        rareza: '⭐⭐⭐⭐⭐',
+        poder: 96,
+        defensa: 92,
+        velocidad: 94,
+        descripcion: 'La forma evolucionada de Vegeta que alcanza un poder comparable al Ultra Instinto. Combina la fuerza bruta con la técnica en un equilibrio perfecto.',
+        habilidades: [
+          { nombre: '🔵 Bola de Energía Galick Gun', desc: 'Un ataque devastador de energía cósmica' },
+          { nombre: '🔵 Escudo de Energía', desc: 'Genera un escudo protector de energía azul' },
+          { nombre: '🔵 Golpes Combinados', desc: 'Serie de ataques rápidos y precisos' }
+        ]
+      },
+      3: {
+        nombre: 'Frieza (Dorado)',
+        saga: 'Saga de la Resurrección de F',
+        imagen: 'https://via.placeholder.com/300x400/ffc107/000000?text=Frieza+Gold',
+        tipo: 'Tirano Galáctico',
+        rareza: '⭐⭐⭐⭐⭐',
+        poder: 95,
+        defensa: 88,
+        velocidad: 93,
+        descripcion: 'La forma dorada de Frieza, lograda en Dragon Ball Super. Un tirano galáctico de inmenso poder que puede competir con los Saiyans Azules.',
+        habilidades: [
+          { nombre: '💛 Bola de Destrucción', desc: 'Una esfera de energía destructiva que puede demoler planetas' },
+          { nombre: '💛 Rayo de Muerte', desc: 'Rayo láser cortante de energía dorada' },
+          { nombre: '💛 Campo de Fuerza', desc: 'Protección energética contra ataques cósmicos' }
+        ]
+      },
+      4: {
+        nombre: 'Jiren',
+        saga: 'Torneo de Poder',
+        imagen: 'https://via.placeholder.com/300x400/8b00ff/ffffff?text=Jiren',
+        tipo: 'Ángel del Universo 11',
+        rareza: '⭐⭐⭐⭐⭐',
+        poder: 97,
+        defensa: 96,
+        velocidad: 95,
+        descripcion: 'El luchador más fuerte del Universo 11. Jiren posee un poder incomparable con una defensa impenetrable y velocidad sobrenatural.',
+        habilidades: [
+          { nombre: '🟣 Puño de la Destrucción', desc: 'Golpe devastador cargado de energía cósmica' },
+          { nombre: '🟣 Escudo del Espíritu', desc: 'Defensa perfecta que refleja energía' },
+          { nombre: '🟣 Explosión de Energía', desc: 'Libera energía en todas direcciones' }
+        ]
+      },
+      5: {
+        nombre: 'Kale & Caulifla',
+        saga: 'Torneo de Poder',
+        imagen: 'https://via.placeholder.com/300x400/ff1493/ffffff?text=Kale+Caulifla',
+        tipo: 'Saiyan Femenino',
+        rareza: '⭐⭐⭐⭐⭐',
+        poder: 94,
+        defensa: 87,
+        velocidad: 92,
+        descripcion: 'La fusión de dos Saiyans femeninos del Universo 6. Combinan poder bruto y técnica, siendo una amenaza formidable en el torneo.',
+        habilidades: [
+          { nombre: '🌸 Kamehameha Doble', desc: 'Dos Kamehamehas simultáneos de poder combinado' },
+          { nombre: '🌸 Teleportación Fusionada', desc: 'Se desplazan juntas a velocidades imposibles' },
+          { nombre: '🌸 Ataque Sincronizado', desc: 'Combinan sus ataques para mayor devastación' }
+        ]
+      },
+      6: {
+        nombre: 'Broly (Super)',
+        saga: 'Película de Broly',
+        imagen: 'https://via.placeholder.com/300x400/228b22/ffffff?text=Broly+Super',
+        tipo: 'Saiyan Legendario',
+        rareza: '⭐⭐⭐⭐⭐',
+        poder: 99,
+        defensa: 93,
+        velocidad: 91,
+        descripcion: 'El Saiyan Legendario renacido. Broly posee un poder bruto sin igual, con la capacidad de crecer más fuerte a cada segundo de batalla.',
+        habilidades: [
+          { nombre: '💚 Rayo Devastador', desc: 'Rayo de energía verde de poder inmensurable' },
+          { nombre: '💚 Onda Explosiva', desc: 'Explosión de energía en ondas concéntricas' },
+          { nombre: '💚 Poder Legendario', desc: 'Aumenta su poder a cada golpe recibido' }
+        ]
+      },
+      7: {
+        nombre: 'Majin Buu',
+        saga: 'Saga de Majin Buu',
+        imagen: 'https://via.placeholder.com/300x400/ff69b4/ffffff?text=Majin+Buu',
+        tipo: 'Entidad Mágica',
+        rareza: '⭐⭐⭐⭐',
+        poder: 92,
+        defensa: 99,
+        velocidad: 85,
+        descripcion: 'El ser antiguo de poder mágico infinito. Majin Buu puede regenerarse de cualquier ataque y posee habilidades sobrenaturales.',
+        habilidades: [
+          { nombre: '💗 Rayo Rosa', desc: 'Rayo de energía mágica de color rosa' },
+          { nombre: '💗 Regeneración Total', desc: 'Se regenera de cualquier daño instantáneamente' },
+          { nombre: '💗 Transformación', desc: 'Puede cambiar su forma corporalmente' }
+        ]
+      },
+      8: {
+        nombre: 'Cell',
+        saga: 'Saga de Cell',
+        imagen: 'https://via.placeholder.com/300x400/9370db/ffffff?text=Cell',
+        tipo: 'Androide Bioestable',
+        rareza: '⭐⭐⭐⭐',
+        poder: 90,
+        defensa: 89,
+        velocidad: 88,
+        descripcion: 'El androide perfecto creado con el ADN de los guerreros más fuertes. Cell posee técnicas de todos y una inteligencia superior.',
+        habilidades: [
+          { nombre: '🟣 Kamehameha Perfecto', desc: 'Kamehameha mejorado por células genéticas Saiyan' },
+          { nombre: '🟣 Regeneración Celular', desc: 'Regenera heridas mediante división celular' },
+          { nombre: '🟣 Abdomen Reactor', desc: 'Libera energía explosiva del núcleo celular' }
+        ]
+      },
+      9: {
+        nombre: 'Androide 17',
+        saga: 'Saga de los Androides',
+        imagen: 'https://via.placeholder.com/300x400/4169e1/ffffff?text=Androide+17',
+        tipo: 'Androide',
+        rareza: '⭐⭐⭐⭐',
+        poder: 88,
+        defensa: 91,
+        velocidad: 90,
+        descripcion: 'El androide rebelado que se convierte en aliado. Posee energía infinita y una resistencia sobrenatural en el campo de batalla.',
+        habilidades: [
+          { nombre: '🔵 Barrera de Energía', desc: 'Campo de fuerza protector indefinido' },
+          { nombre: '🔵 Rayo de Dispersión', desc: 'Pulso de energía azul devastador' },
+          { nombre: '🔵 Energía Infinita', desc: 'No requiere descanso ni recuperación de ki' }
+        ]
+      },
+      10: {
+        nombre: 'Goku Black',
+        saga: 'Saga de Trunks del Futuro',
+        imagen: 'https://via.placeholder.com/300x400/000000/ffffff?text=Goku+Black',
+        tipo: 'Dios Oscuro',
+        rareza: '⭐⭐⭐⭐⭐',
+        poder: 93,
+        defensa: 87,
+        velocidad: 94,
+        descripcion: 'El Zamasu en cuerpo de Goku. Un ser divino que utiliza el poder de un Saiyan con técnicas de dios, creando un equilibrio letal.',
+        habilidades: [
+          { nombre: '⚫ Kamehameha Negro', desc: 'Kamehameha cargado con energía destructiva de dios' },
+          { nombre: '⚫ Espada de Ki', desc: 'Crea una espada de energía oscura pura' },
+          { nombre: '⚫ Destrucción Divina', desc: 'Ataque que anula regeneración' }
+        ]
+      },
+      11: {
+        nombre: 'Zamasu',
+        saga: 'Saga de Trunks del Futuro',
+        imagen: 'https://via.placeholder.com/300x400/009900/ffffff?text=Zamasu',
+        tipo: 'Dios Supremo',
+        rareza: '⭐⭐⭐⭐⭐',
+        poder: 94,
+        defensa: 90,
+        velocidad: 92,
+        descripcion: 'El Kaio supremo de universos paralelos. Zamasu es inmortal y posee poder de creación y destrucción de realidades.',
+        habilidades: [
+          { nombre: '💚 Destello Divino', desc: 'Ataque de poder creador de realidades' },
+          { nombre: '💚 Inmortalidad Infinita', desc: 'No puede ser derrotado ni destruido' },
+          { nombre: '💚 Manipulación Temporal', desc: 'Controla el flujo del tiempo' }
+        ]
+      },
+      12: {
+        nombre: 'Trunks (SSB)',
+        saga: 'Dragon Ball Super',
+        imagen: 'https://via.placeholder.com/300x400/0099ff/ffffff?text=Trunks+SSB',
+        tipo: 'Saiyan del Futuro',
+        rareza: '⭐⭐⭐⭐',
+        poder: 89,
+        defensa: 86,
+        velocidad: 91,
+        descripcion: 'El guerrero del futuro que domina la forma Super Saiyan Blue. Trunks demuestra que la determinación puede superar límites cósmicos.',
+        habilidades: [
+          { nombre: '🔵 Espada Destrozadora', desc: 'Espada energética que corta la realidad' },
+          { nombre: '🔵 Kamehameha Blue', desc: 'Kamehameha con energía de dios supremo' },
+          { nombre: '🔵 Flash Finalista', desc: 'Teleportación veloz para ataques sorpresa' }
+        ]
+      }
+    };
+
+    function mostrarPersonaje() {
+      const select = document.getElementById('personajes');
+      const id = select.value;
+      const infoBox = document.getElementById('infoBox');
+
+      if (!id) {
+        infoBox.classList.remove('visible');
+        return;
+      }
+
+      const p = personajes[id];
+      document.getElementById('imagenPersonaje').src = p.imagen;
+      document.getElementById('nombre').textContent = p.nombre;
+      document.getElementById('saga').textContent = `Saga: ${p.saga}`;
+      document.getElementById('tipo').textContent = p.tipo;
+      document.getElementById('rareza').textContent = p.rareza;
+      document.getElementById('poder').textContent = p.poder;
+      document.getElementById('defensa').textContent = p.defensa;
+      document.getElementById('velocidad').textContent = p.velocidad;
+      document.getElementById('descripcion').textContent = p.descripcion;
+
+      const habilidadesHTML = p.habilidades.map(h => 
+        `<div class="habilidad">
+          <div class="habilidad-nombre">${h.nombre}</div>
+          <div class="habilidad-desc">${h.desc}</div>
+        </div>`
+      ).join('');
+      document.getElementById('habilidadesContainer').innerHTML = habilidadesHTML;
+
+      infoBox.classList.add('visible');
+    }
+  </script>
+</body>
+</html>

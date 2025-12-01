@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Selección - ambas imágenes</title>
+  <style>
+    body{margin:0;background:#071223;color:#e6eef8;font-family:system-ui,Segoe UI,Roboto,Arial;padding:20px}
+    .wrap{max-width:1000px;margin:0 auto}
+    h1{font-size:18px}
+    .row{display:flex;gap:12px;align-items:flex-start}
+  .card{background:rgba(255,255,255,0.03);padding:8px;border-radius:10px;text-align:center;display:flex;align-items:center;justify-content:center;width:160px;margin:0 auto}
+  .card img{width:120px;height:auto;border-radius:6px;display:block}
+  .selected{outline:4px solid #3db39e}
+  .character{outline:4px solid #f2c94c}
+    .controls{margin-top:12px;display:flex;gap:8px;align-items:center}
+    button{background:#3db39e;border:none;color:#042d25;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#9fb3b0}
+    .meta{color:#9fb3b0;font-size:13px}
+    /* Card game styles */
+    #cardGameArea{display:flex;flex-direction:column;gap:12px;padding:12px;background:rgba(255,255,255,0.01);border-radius:10px;height:100%}
+    #gameStatus{text-align:center;color:#9fb4c6;font-weight:600;min-height:24px}
+  #rivalHand,#playerHand{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px;min-height:60px}
+  .gameCard{width:50px;height:70px;border:2px solid rgba(255,255,255,0.06);border-radius:4px;display:flex;align-items:center;justify-content:center;background:#081826;cursor:pointer;transition:all 0.12s;overflow:hidden}
+  .gameCard img{width:100%;height:100%;object-fit:contain;display:block}
+  .gameCard:hover{transform:translateY(-4px);box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+  .gameCard.played{opacity:0.6;cursor:default}
+  .gameCard.rivalChoice{box-shadow:0 6px 18px rgba(61,179,158,0.14);border-color:#3db39e;transform:translateY(-6px)}
+    #playZone{display:flex;gap:12px;justify-content:center;align-items:center;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;min-height:80px}
+    .playedCard{width:60px;height:80px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:4px;display:flex;align-items:center;justify-content:center;color:#9fb4c6;font-size:11px;text-align:center}
+    #playerHand .gameCard{cursor:pointer}
+    #playerHand .gameCard.disabled{cursor:not-allowed;opacity:0.4}
+  .roundOutcome{margin-left:8px;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:700}
+  .roundOutcome.win{background:#183; color:#042d25}
+  .roundOutcome.lose{background:#c33; color:#fff}
+  .roundOutcome.tie{background:#667; color:#fff}
+    /* legend in top-left showing which card beats which */
+    #cardRules{position:fixed;left:12px;top:12px;background:rgba(0,0,0,0.5);padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);z-index:200}
+    #cardRules .rule{display:flex;align-items:center;gap:8px;color:#e6eef8;font-size:13px;margin:4px 0}
+    #cardRules img{width:28px;height:38px;object-fit:contain;display:block}
+    /* end-of-game overlay */
+    #endOverlay{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,12,0.6);z-index:500;visibility:hidden;opacity:0;transition:opacity 0.18s}
+    #endOverlay .panel{background:#071223;color:#e6eef8;padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);min-width:260px;max-width:420px;text-align:center}
+    #endOverlay .panel h2{margin:0 0 8px 0;font-size:20px}
+    #endOverlay .panel p{margin:6px 0 12px 0;color:#9fb4c6}
+    #endOverlay.show{visibility:visible;opacity:1}
+    #endOverlay button{background:#3db39e;border:none;color:#042d25;padding:8px 14px;border-radius:8px;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div id="cardRules" aria-hidden="false">
+    <div style="font-weight:700;margin-bottom:6px;color:#9fb4c6;font-size:12px">Reglas (qué gana a qué)</div>
+    <div class="rule"><img src="blue.png" alt="blue"> <span>&gt;</span> <img src="stike.png" alt="strike"></div>
+    <div class="rule"><img src="stike.png" alt="strike"> <span>&gt;</span> <img src="blast.png" alt="blast"></div>
+    <div class="rule"><img src="blast.png" alt="blast"> <span>&gt;</span> <img src="blue.png" alt="blue"></div>
+    <div class="rule"><img src="Sushiprofe.webp" alt="sushi"> <span>&nbsp;</span> <strong style="color:#ffd27f;font-size:13px">Gana a todo (1/50)</strong></div>
+  </div>
+  <div class="wrap">
+    <h1>Ambas imágenes</h1>
+    <div class="meta">La imagen seleccionada aparece resaltada. Arriba verás la otra imagen; abajo la que elegiste. Deja espacio entre ambas para el futuro juego de cartas.</div>
+
+    <div id="imagesArea">
+      <div class="card" id="topCard" style="margin-bottom:24px;"> <!-- top image placeholder -->
+      </div>
+
+      <div id="playPlaceholder" style="height:240px;margin:28px 0;border-radius:10px;background:rgba(255,255,255,0.01);display:flex;align-items:center;justify-content:center;color:#9fb3b0">
+        <div id="cardGameArea" style="display:none;width:100%">
+          <div id="gameStatus">Juego de Cartas</div>
+          <div id="rivalHand"></div>
+          <div id="playZone"></div>
+          <div id="playerHand"></div>
+        </div>
+        <div id="startGamePrompt" style="text-align:center">
+          <div style="margin-bottom:12px">Área intermedia (espacio para juego de cartas)</div>
+          <button id="startCardGameBtn" style="padding:8px 16px;background:#3db39e;border:none;color:#042d25;border-radius:8px;cursor:pointer;font-weight:600">Empezar Juego de Cartas</button>
+        </div>
+      </div>
+
+  <div class="card" id="bottomCard" style="margin-top:260px;"> <!-- selected image placeholder (moved down to not overlap cards) -->
+  </div>
+    </div>
+    <div class="controls">
+      <button id="backBtn" class="ghost">Volver</button>
+      <button id="resetSelBtn" class="ghost">Resetear selección</button>
+      <button id="resetGameBtn" style="background:#c74444;color:#fff">Resetear partida</button>
+      <div style="flex:1"></div>
+      <div class="meta" id="selMeta"></div>
+    </div>
+  </div>
+
+  <script>
+  // hide overlay helper
+  function hideEndOverlay(){
+    const ov = document.getElementById('endOverlay'); if(!ov) return; ov.classList.remove('show'); ov.setAttribute('aria-hidden','true');
+  }
+
+  const images = ['DBL15-06S.webp','DBL-EVT-19S.webp'];
+
+  function readSelection(){
+    let sel = null;
+    try{ sel = localStorage.getItem('juegodbl_selected'); }catch(e){}
+    // if none, default to first
+    if(!sel) sel = images[0];
+    return sel;
+  }
+
+  const sel = readSelection();
+  const selMeta = document.getElementById('selMeta');
+
+  const topCard = document.getElementById('topCard');
+  const bottomCard = document.getElementById('bottomCard');
+
+  function makeImageElement(src, extraClass){
+    const img = document.createElement('img'); img.src = src; img.alt = src;
+    if(extraClass) img.classList.add(extraClass);
+    img.style.cursor = 'pointer';
+    return img;
+  }
+
+  // Character selection: allow user to pick which image will be the character
+  function readCharacter(){
+    try{ return localStorage.getItem('juegodbl_character'); }catch(e){ return null; }
+  }
+  function writeCharacter(v){ try{ localStorage.setItem('juegodbl_character', v); }catch(e){} }
+    function readLocked(){ try{ return localStorage.getItem('juegodbl_locked') === '1'; }catch(e){ return false; } }
+    function writeLocked(v){ try{ localStorage.setItem('juegodbl_locked', v ? '1' : '0'); }catch(e){} }
+
+  // default character is the previously selected image (sel) if none set
+  let charSel = readCharacter() || sel;
+    let locked = readLocked();
+
+  // Render top (rival) and bottom (your character) based on charSel
+  function renderCards(){
+    const rival = images.find(s=> s !== charSel) || images[0];
+
+    topCard.innerHTML = '';
+    const topImg = makeImageElement(rival, '');
+    topCard.appendChild(topImg);
+    // clicking rival selects them as character (swap)
+      // clicking rival selects them as character (swap) only if not locked
+      if(!locked){
+        topImg.addEventListener('click', ()=>{
+          charSel = rival; writeCharacter(charSel); locked = true; writeLocked(true); renderCards();
+        });
+      } else {
+        // show a small lock indicator
+        const lockNote = document.createElement('div'); lockNote.className='meta'; lockNote.style.marginTop='8px'; lockNote.textContent='Personaje bloqueado'; topCard.appendChild(lockNote);
+      }
+
+    bottomCard.innerHTML = '';
+    const bottomImg = makeImageElement(charSel, 'character');
+    bottomCard.appendChild(bottomImg);
+    bottomImg.addEventListener('click', ()=>{
+      // clicking bottom keeps as character but can toggle to rival if desired
+      // no-op or future behavior
+    });
+
+    // small choose buttons
+  const btnTop = document.createElement('button'); btnTop.textContent = 'Elegir como personaje'; btnTop.className='ghost';
+  btnTop.style.marginTop = '8px';
+  btnTop.addEventListener('click', ()=>{ if(locked) return; charSel = rival; writeCharacter(charSel); locked = true; writeLocked(true); renderCards(); });
+  topCard.appendChild(btnTop);
+
+  const btnBottom = document.createElement('button'); btnBottom.textContent = 'Elegir como personaje';
+  btnBottom.style.marginTop = '8px';
+  btnBottom.addEventListener('click', ()=>{ if(locked) return; charSel = charSel || sel; writeCharacter(charSel); locked = true; writeLocked(true); renderCards(); });
+  bottomCard.appendChild(btnBottom);
+
+    selMeta.textContent = 'Seleccionada: ' + sel + ' — Rival: ' + rival + ' — Personaje: ' + charSel;
+  }
+
+  renderCards();
+
+  document.getElementById('backBtn').addEventListener('click', ()=>{ history.back(); });
+    // Reset selección button clears character selection and lock
+    document.getElementById('resetSelBtn').addEventListener('click', ()=>{
+      try{ localStorage.removeItem('juegodbl_character'); localStorage.removeItem('juegodbl_locked'); }catch(e){}
+      // also clear selected and navigate back to selector to rechoose
+      try{ localStorage.removeItem('juegodbl_selected'); }catch(e){}
+      // reload page to reflect changes
+      location.reload();
+    });
+    
+    // Reset partida button clears all localStorage keys
+    document.getElementById('resetGameBtn').addEventListener('click', ()=>{
+      try{ 
+        localStorage.removeItem('juegodbl_character');
+        localStorage.removeItem('juegodbl_locked');
+        localStorage.removeItem('juegodbl_selected');
+      }catch(e){}
+      location.reload();
+    });
+
+    // ===== CARD GAME LOGIC =====
+    const cardTypes = ['strike', 'blast', 'blue'];
+    let gameState = {
+      playerHand: [],
+      rivalHand: [],
+      playerPlayed: null,
+      rivalPlayed: null,
+      playerScore: 0,
+      rivalScore: 0,
+      isPlayerTurn: true,
+      gameActive: false,
+      winner: null,
+      lastRoundOutcome: null,
+      rivalPlayIndex: null,
+      roundsPlayed: 0
+    };
+
+    function createDeck(){
+      // Create 10 cards for each player: mix of strike, blast, blue and rare sushi (1/50 chance per card)
+      const deck = [];
+      for(let i=0; i<10; i++){
+        // 1 in 50 chance to get the special 'sushi' card
+        if(Math.random() < (1/50)){
+          deck.push('sushi');
+          continue;
+        }
+        const type = cardTypes[Math.floor(Math.random() * cardTypes.length)];
+        deck.push(type);
+      }
+      return deck.sort(() => Math.random() - 0.5); // shuffle
+    }
+
+    function cardImageSrc(type){
+      if(!type) return '';
+      if(type === 'strike') return 'stike.png';
+      if(type === 'blast') return 'blast.png';
+      if(type === 'blue') return 'blue.png';
+      if(type === 'sushi') return 'Sushiprofe.webp';
+      return '';
+    }
+
+    function initCardGame(){
+      gameState.playerHand = createDeck();
+      gameState.rivalHand = createDeck();
+      gameState.playerScore = 0;
+      gameState.rivalScore = 0;
+      gameState.isPlayerTurn = true;
+      gameState.gameActive = true;
+      gameState.winner = null;
+      gameState.playerPlayed = null;
+      gameState.rivalPlayed = null;
+      gameState.lastRoundOutcome = null;
+      // ensure any end overlay is hidden when starting
+      hideEndOverlay();
+
+      document.getElementById('startGamePrompt').style.display = 'none';
+      document.getElementById('cardGameArea').style.display = 'flex';
+      renderCardGame();
+    }
+
+    function renderCardGame(){
+      const gameStatus = document.getElementById('gameStatus');
+      const rivalHandEl = document.getElementById('rivalHand');
+      const playerHandEl = document.getElementById('playerHand');
+      const playZoneEl = document.getElementById('playZone');
+
+      if(gameState.winner){
+        // show end overlay with big message
+        const ov = document.getElementById('endOverlay');
+        const title = document.getElementById('endTitle');
+        const msg = document.getElementById('endMessage');
+        if(gameState.winner === 'tie'){
+          gameStatus.textContent = '¡Empate!';
+          if(title) title.textContent = 'Empate';
+          if(msg) msg.textContent = 'La partida ha terminado en empate.';
+        } else if(gameState.winner === 'player'){
+          gameStatus.textContent = '¡Ganaste!';
+          if(title) title.textContent = 'Victoria';
+          if(msg) msg.textContent = '¡Felicidades! Has ganado la partida.';
+        } else {
+          gameStatus.textContent = 'Rival ganó';
+          if(title) title.textContent = 'Derrota';
+          if(msg) msg.textContent = 'Has perdido esta partida. Inténtalo de nuevo.';
+        }
+        playerHandEl.innerHTML = '';
+        rivalHandEl.innerHTML = '';
+        playZoneEl.innerHTML = '';
+        if(ov){ ov.classList.add('show'); ov.setAttribute('aria-hidden','false'); }
+        return;
+      }
+
+      gameStatus.textContent = gameState.isPlayerTurn ? 'Tu turno - Elige una carta' : 'Rival está jugando...';
+
+      // Render rival hand (show face-up images)
+      rivalHandEl.innerHTML = '';
+      gameState.rivalHand.forEach((cardType, idx) => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'gameCard';
+        const img = document.createElement('img'); img.src = cardImageSrc(cardType); img.alt = cardType;
+        img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'contain';
+        cardEl.appendChild(img);
+        // highlight the card the rival has chosen for this round
+        if(gameState.rivalPlayIndex !== null && idx === gameState.rivalPlayIndex){
+          cardEl.classList.add('rivalChoice');
+        }
+        rivalHandEl.appendChild(cardEl);
+      });
+
+      // Render player hand (clickable)
+      playerHandEl.innerHTML = '';
+      gameState.playerHand.forEach((cardType, idx)=>{
+        const cardEl = document.createElement('div');
+        cardEl.className = `gameCard ${cardType}`;
+        const img = document.createElement('img');
+        img.src = cardImageSrc(cardType);
+        img.alt = cardType;
+        cardEl.appendChild(img);
+        if(gameState.isPlayerTurn){
+          cardEl.addEventListener('click', () => playCard(idx));
+        } else {
+          cardEl.classList.add('disabled');
+        }
+        playerHandEl.appendChild(cardEl);
+      });
+
+      // Render play zone
+      playZoneEl.innerHTML = '';
+      const statusDiv = document.createElement('div');
+      statusDiv.style.width = '100%';
+      statusDiv.style.textAlign = 'center';
+      statusDiv.style.color = '#9fb4c6';
+      statusDiv.style.fontSize = '12px';
+      
+      if(gameState.playerPlayed && gameState.rivalPlayed){
+        // both played: show both cards and the round result
+        const rivalPlayedEl = document.createElement('div');
+        rivalPlayedEl.className = 'playedCard';
+        const rImg = document.createElement('img'); rImg.src = cardImageSrc(gameState.rivalPlayed); rImg.alt = gameState.rivalPlayed || '';
+        rImg.style.width='60px'; rImg.style.height='80px'; rImg.style.objectFit='contain';
+        rivalPlayedEl.innerHTML = ''; rivalPlayedEl.appendChild(rImg);
+        playZoneEl.appendChild(rivalPlayedEl);
+
+        const vsDiv = document.createElement('div');
+        vsDiv.textContent = 'VS';
+        vsDiv.style.color = '#9fb4c6';
+        vsDiv.style.fontWeight = 'bold';
+        vsDiv.style.margin = '0 12px';
+        playZoneEl.appendChild(vsDiv);
+
+  const playerPlayedEl = document.createElement('div');
+  playerPlayedEl.className = 'playedCard';
+  const pImg = document.createElement('img'); pImg.src = cardImageSrc(gameState.playerPlayed); pImg.alt = gameState.playerPlayed || '';
+  pImg.style.width='60px'; pImg.style.height='80px'; pImg.style.objectFit='contain';
+  playerPlayedEl.innerHTML = ''; playerPlayedEl.appendChild(pImg);
+  playZoneEl.appendChild(playerPlayedEl);
+
+        // Show result (only when both present)
+        const roundWinner = determineWinner(gameState.playerPlayed, gameState.rivalPlayed);
+        const resultEl = document.createElement('div');
+        resultEl.style.marginTop = '8px';
+        resultEl.style.fontSize = '11px';
+        resultEl.style.color = '#fff';
+        if(roundWinner === 'player'){
+          resultEl.textContent = '¡Ganaste esta ronda!';
+          resultEl.style.color = '#3db39e';
+        } else if(roundWinner === 'rival'){
+          resultEl.textContent = 'Rival ganó esta ronda';
+          resultEl.style.color = '#e67e22';
+        } else {
+          resultEl.textContent = 'Empate';
+          resultEl.style.color = '#9fb4c6';
+        }
+        // show outcome badge near player's card if available
+        if(gameState.lastRoundOutcome){
+          const badge = document.createElement('div');
+          badge.className = 'roundOutcome ' + (gameState.lastRoundOutcome === 'win' ? 'win' : (gameState.lastRoundOutcome === 'lose' ? 'lose' : 'tie'));
+          badge.textContent = gameState.lastRoundOutcome === 'win' ? 'Victoria' : (gameState.lastRoundOutcome === 'lose' ? 'Derrota' : 'Empate');
+          // append badge after playZone content
+          playZoneEl.appendChild(badge);
+        }
+        playZoneEl.appendChild(resultEl);
+
+  } else if(gameState.playerPlayed && !gameState.rivalPlayed){
+        // only player has played
+        const playerPlayedEl = document.createElement('div');
+        playerPlayedEl.className = 'playedCard';
+        const pImg = document.createElement('img'); pImg.src = cardImageSrc(gameState.playerPlayed); pImg.alt = gameState.playerPlayed || '';
+        pImg.style.width='60px'; pImg.style.height='80px'; pImg.style.objectFit='contain';
+        playerPlayedEl.innerHTML = ''; playerPlayedEl.appendChild(pImg);
+        playZoneEl.appendChild(playerPlayedEl);
+        const wait = document.createElement('div'); wait.textContent = 'Esperando rival...'; wait.style.color='#9fb4c6'; wait.style.marginLeft='12px'; playZoneEl.appendChild(wait);
+
+  } else if(!gameState.playerPlayed && gameState.rivalPlayed){
+        // only rival has played
+        const rivalPlayedEl = document.createElement('div');
+        rivalPlayedEl.className = 'playedCard';
+        const rImg = document.createElement('img'); rImg.src = cardImageSrc(gameState.rivalPlayed); rImg.alt = gameState.rivalPlayed || '';
+        rImg.style.width='60px'; rImg.style.height='80px'; rImg.style.objectFit='contain';
+        rivalPlayedEl.innerHTML = ''; rivalPlayedEl.appendChild(rImg);
+        playZoneEl.appendChild(rivalPlayedEl);
+        const wait = document.createElement('div'); wait.textContent = 'Esperando tu carta...'; wait.style.color='#9fb4c6'; wait.style.marginLeft='12px'; playZoneEl.appendChild(wait);
+
+      } else {
+        statusDiv.innerHTML = `Puntuación: <br/>Tú ${gameState.playerScore}/10 | Rival ${gameState.rivalScore}/10`;
+        playZoneEl.appendChild(statusDiv);
+      }
+    }
+
+    function playCard(idx){
+      if(!gameState.isPlayerTurn || !gameState.gameActive) return;
+
+      gameState.playerPlayed = gameState.playerHand[idx];
+      gameState.playerHand.splice(idx, 1);
+
+      gameState.isPlayerTurn = false;
+      renderCardGame();
+
+      // Rival plays after a short delay
+      setTimeout(() => rivalPlaysCard(), 1000);
+    }
+
+    function determineWinner(player, rival){
+      // Special sushi card: beats any single opposing card (ties with itself)
+      if(player === rival) return 'tie';
+      if(player === 'sushi' && rival !== 'sushi') return 'player';
+      if(rival === 'sushi' && player !== 'sushi') return 'rival';
+      // blue > strike > blast > blue
+      if(player === 'blue' && rival === 'strike') return 'player';
+      if(player === 'strike' && rival === 'blast') return 'player';
+      if(player === 'blast' && rival === 'blue') return 'player';
+      return 'rival';
+    }
+
+    function rivalPlaysCard(){
+      if(gameState.rivalHand.length === 0){
+        gameState.gameActive = false;
+        // Determinar ganador por puntuación
+        if(gameState.playerScore > gameState.rivalScore){
+          gameState.winner = 'player';
+        } else if(gameState.rivalScore > gameState.playerScore){
+          gameState.winner = 'rival';
+        } else {
+          gameState.winner = 'tie';
+        }
+        renderCardGame();
+        return;
+      }
+
+      // choose an index in rival's hand but DO NOT remove it yet — highlight it in hand
+      const idx = Math.floor(Math.random() * gameState.rivalHand.length);
+  gameState.rivalPlayIndex = idx;
+  // Do not set rivalPlayed yet — we first highlight the choice in the hand, then reveal it
+      renderCardGame();
+
+      // after a short reveal time, compute winner and remove the card
+      setTimeout(()=>{
+        // reveal the rival's chosen card and then determine the winner
+        if(gameState.rivalPlayIndex !== null){
+          gameState.rivalPlayed = gameState.rivalHand[gameState.rivalPlayIndex];
+        }
+        const roundWinner = determineWinner(gameState.playerPlayed, gameState.rivalPlayed);
+        if(roundWinner === 'player'){
+          gameState.playerScore++;
+          gameState.lastRoundOutcome = 'win';
+        } else if(roundWinner === 'rival'){
+          gameState.rivalScore++;
+          gameState.lastRoundOutcome = 'lose';
+        } else {
+          gameState.lastRoundOutcome = 'tie';
+        }
+
+        gameState.roundsPlayed = (gameState.roundsPlayed || 0) + 1;
+
+        // remove the revealed card from rival hand now
+        if(gameState.rivalPlayIndex !== null){
+          gameState.rivalHand.splice(gameState.rivalPlayIndex, 1);
+        }
+        gameState.rivalPlayIndex = null;
+
+        // If we've played all rounds, finish the game and decide by score
+        if(gameState.roundsPlayed >= 10){
+          gameState.gameActive = false;
+          if(gameState.playerScore > gameState.rivalScore) gameState.winner = 'player';
+          else if(gameState.rivalScore > gameState.playerScore) gameState.winner = 'rival';
+          else gameState.winner = 'tie';
+          renderCardGame();
+          return;
+        }
+
+        // show outcome briefly, then clear played cards and continue
+        setTimeout(()=>{
+          gameState.playerPlayed = null;
+          gameState.rivalPlayed = null;
+          gameState.lastRoundOutcome = null;
+          gameState.isPlayerTurn = true;
+          renderCardGame();
+        }, 900);
+      }, 700);
+    }
+
+    document.getElementById('startCardGameBtn').addEventListener('click', initCardGame);
+    // create overlay element and wire buttons actions
+    (function(){
+      // insert overlay markup into DOM if not present
+      if(!document.getElementById('endOverlay')){
+        const div = document.createElement('div');
+        div.id = 'endOverlay'; div.setAttribute('aria-hidden','true'); div.innerHTML = `
+          <div class="panel">
+            <h2 id="endTitle">Resultado</h2>
+            <p id="endMessage">--</p>
+            <div style="display:flex;gap:8px;justify-content:center">
+              <button id="playAgainBtn">Jugar otra vez</button>
+              <button id="closeOverlayBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:#9fb3b0">Cerrar</button>
+            </div>
+          </div>`;
+        document.body.appendChild(div);
+      }
+
+      // wire buttons
+      const playAgain = document.getElementById('playAgainBtn');
+      const closeBtn = document.getElementById('closeOverlayBtn');
+      const ov = document.getElementById('endOverlay');
+      if(playAgain){ playAgain.addEventListener('click', ()=>{ hideEndOverlay(); initCardGame(); }); }
+      if(closeBtn){ closeBtn.addEventListener('click', ()=>{ hideEndOverlay(); }); }
+    })();
+  </script>
+</body>
+</html>
