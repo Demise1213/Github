@@ -1,1 +1,2 @@
 Un juego que tomó como referencia Dragon Ball Legens de teléfono móvil para crear un "apasionante" juego de cartas en el que tendrás que hacer frente a tu rival escogiendo un personaje y cartas del propio juego de móvil
+https://demise1213.github.io/Github/ enlace del juego
